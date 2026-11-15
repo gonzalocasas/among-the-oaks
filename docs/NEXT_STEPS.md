@@ -3,7 +3,7 @@
 ## Milestone A: baseline reproducibility
 - [ ] Run the included prototype in a supported local browser.
 - [ ] Fix any errors and pin/bundle all dependencies.
-- [ ] Capture `naturalistic` and `symbolic` screenshots from identical camera pose, viewport and quality.
+- [x] ~~Capture `naturalistic` and `symbolic` screenshots from identical camera pose, viewport and quality.~~ Decided 15 Nov 2026 after phone testing: keep the naturalistic style only; symbolic mode removed.
 - [ ] Export performance JSON for each, and record hardware/browser/backend.
 - [ ] Verify touch movement, look gesture and pointer lock.
 

@@ -19,6 +19,11 @@
 - Movement: fixed yaw sign bug (walk direction diverged from view after turning, strafe inverted), added smoothed velocity, diagonal normalisation, sliding collision on all trunks, light head bob, arrow keys.
 - Cache busting: deploy workflow stamps the commit hash into `index.html` (`main.js?v=<sha>`) and writes `version.json`; a stale cached page reloads once with `?v=<sha>`.
 
+## Symbolic mode removed; draw-call fix, 15 Nov 2026
+- Decision: continue with the naturalistic style only. Symbolic mode, its UI and its code paths are removed (`docs/HANDOFF.md` is left as the original brief).
+- HUD bug: "Draw calls" showed `renderer.info.render.calls`, which in WebGPURenderer is the cumulative number of render passes since page load (it was ~11,000 on the phone and growing). It now shows `renderer.info.render.drawCalls` (per frame); exported JSON uses the same.
+- Measured per-frame draw calls (headless, all quality levels): 175 before, 81 after merging each tree's trunk, branches and roots into one mesh. Triangle count unchanged.
+
 ## Not verified
 - Actual browser rendering and console runtime success.
 - WebGPU and WebGL2 fallback on any physical device.
