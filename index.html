@@ -10,5 +10,10 @@
 </head>
 <body>
 <div id="hud"><header><div><h1>Among the Oaks</h1><small>One Oak · Rendering Benchmark 001</small></div><div id="controls"><button id="natural" aria-pressed="true">Naturalistic</button><button id="symbolic" aria-pressed="false">Symbolic</button><select id="quality" aria-label="Render quality"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select><button id="reset">Reset view</button><button id="export">Export results</button></div></header><div id="status">Preparing forest…</div><div id="stats"><div>Renderer: <span id="backend">initializing</span></div><div>Frame rate: <strong id="fps">—</strong> FPS</div><div>Frame time: <span id="ms">—</span> ms</div><div>Draw calls: <span id="draws">—</span></div><div>Triangles: <span id="triangles">—</span></div><div>Mode: <span id="mode">naturalistic</span></div></div><div id="crosshair"></div><div id="help">Click to look · WASD to walk · Shift to move faster<br>1 / 2 switch styles · Q changes quality · R resets camera</div><div id="mobile"><div id="stick"><div id="knob"></div></div><div id="look"></div></div><div id="credits">Procedural art study. No captured scans or Gaussian splats yet.</div></div>
-<script type="module" src="./src/main.js"></script>
+<script>
+// Cache buster. The deploy workflow replaces a24ac17a with the commit hash and writes version.json.
+// If this cached page is older than the deployed build, reload once with ?v=<build> to get a fresh copy.
+(function(){var B='a24ac17a';if(B.indexOf('BUILD')>0)return;fetch('./version.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j.v&&j.v!==B&&new URLSearchParams(location.search).get('v')!==j.v){location.replace(location.pathname+'?v='+j.v+location.hash)}}).catch(function(){})})();
+</script>
+<script type="module" src="./src/main.js?v=a24ac17a"></script>
 </body></html>
