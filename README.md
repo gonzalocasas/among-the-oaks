@@ -15,3 +15,5 @@ Then open http://localhost:8080 on the same computer. The current source **requi
 `concept-art/` contains AI-generated references only; none are screenshots from the prototype. See `docs/VALIDATION.md` for what was and was not tested.
 
 The original code is in `prototype/`.
+
+Third-party asset: `prototype/splats/lion.v3.spz`, "Lion" by Renaud (https://superspl.at/scene/56155c3f), CC BY 4.0, used as a sample Gaussian splat.

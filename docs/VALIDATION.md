@@ -24,6 +24,14 @@
 - HUD bug: "Draw calls" showed `renderer.info.render.calls`, which in WebGPURenderer is the cumulative number of render passes since page load (it was ~11,000 on the phone and growing). It now shows `renderer.info.render.drawCalls` (per frame); exported JSON uses the same.
 - Measured per-frame draw calls (headless, all quality levels): 175 before, 81 after merging each tree's trunk, branches and roots into one mesh. Triangle count unchanged.
 
+## Gaussian splat experiment, 15 Nov 2026
+- Renderer: three.js r186's native `GaussianSplat` (examples/jsm/objects), WebGPU compute sort; JS sort on the WebGL2 fallback. Loaders: SPZ, PLY, SPLAT, KSPLAT.
+- UI: "Splat" select (bundled sample), "Open splat…" (pick a local file on the device, nothing is uploaded), "Flip splat" (180° about X for captures stored upside down).
+- Placement: on the ground ~6 m in front of the camera. Captures between 0.3 and 40 m keep their own scale; anything outside that range is scaled to 3 m.
+- Sample: `prototype/splats/lion.v3.spz` (4.3 MB, 195,099 splats), "Lion" by Renaud via superspl.at, CC BY 4.0; credit shown in the status line and in `lion.license.txt`. Copied from the three.js examples.
+- Headless Chrome (WebGL2, software): sample loads and decodes in ~1.5–2 s; local `.splat` file loads via the file input; Flip and clear work; no JS errors. The triangle counter includes 2 triangles per splat.
+- Known limits: splats take no fog, light or shadows from the scene; no collision; "Flip" only covers the common upside-down case.
+
 ## Not verified
 - Actual browser rendering and console runtime success.
 - WebGPU and WebGL2 fallback on any physical device.

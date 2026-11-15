@@ -1,5 +1,10 @@
 import * as THREE from 'three/webgpu';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {GaussianSplat} from 'three/addons/objects/GaussianSplat.js';
+import {SPZLoader} from 'three/addons/loaders/SPZLoader.js';
+import {GaussianSplatPLYLoader} from 'three/addons/loaders/GaussianSplatPLYLoader.js';
+import {SPLATLoader} from 'three/addons/loaders/SPLATLoader.js';
+import {KSPLATLoader} from 'three/addons/loaders/KSPLATLoader.js';
 // Two artistic approaches, ONE forest layout, ONE first-person camera and ONE measurement harness.
 // A transparent renderer fallback is managed by Three.js WebGPURenderer itself.
 const $=id=>document.getElementById(id);
@@ -64,7 +69,7 @@ function build(){if(forest){scene.remove(forest);forest.traverse(n=>{if(n.geomet
 let keys={};window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyR')reset();if(e.code==='KeyQ'){const opts=['low','medium','high'];$('quality').value=opts[(opts.indexOf(quality)+1)%3];quality=$('quality').value;build()}});window.addEventListener('keyup',e=>keys[e.code]=false);
 function reset(){camera.position.set(2.7,1.75,11.5);yaw=.07;pitch=-.015;vel.x=vel.z=0}
 $('quality').onchange=e=>{quality=e.target.value;build()};$('reset').onclick=reset;
-const reports=[];$('export').onclick=()=>{const payload={project:'Among the Oaks · One Oak Benchmark',date:new Date().toISOString(),userAgent:navigator.userAgent,backend:$('backend').textContent,quality,report:reports.slice(-60),notes:'FPS is measured from requestAnimationFrame cadence; GPU time is not measured.'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='among-the-oaks-benchmark.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+const reports=[];$('export').onclick=()=>{const payload={project:'Among the Oaks · One Oak Benchmark',date:new Date().toISOString(),userAgent:navigator.userAgent,backend:$('backend').textContent,quality,splat:splatStats,report:reports.slice(-60),notes:'FPS is measured from requestAnimationFrame cadence; GPU time is not measured.'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='among-the-oaks-benchmark.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 renderer.domElement.addEventListener('click',()=>{if(!matchMedia('(pointer:coarse)').matches)renderer.domElement.requestPointerLock?.()});document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement){yaw-=e.movementX*.0022;pitch=Math.max(-1.2,Math.min(1.2,pitch-e.movementY*.0022))}});
 let stickX=0,stickY=0,stickId=null;const stick=$('stick'),knob=$('knob');function updateStick(e){const b=stick.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2);const len=Math.max(1,Math.hypot(dx,dy));const f=Math.min(1,len/38);stickX=dx/len*f;stickY=dy/len*f;knob.style.transform=`translate(${stickX*34}px,${stickY*34}px)`}stick.addEventListener('pointerdown',e=>{stickId=e.pointerId;stick.setPointerCapture(e.pointerId);updateStick(e)});stick.addEventListener('pointermove',e=>{if(stickId===e.pointerId)updateStick(e)});const end=()=>{stickId=null;stickX=stickY=0;knob.style.transform='translate(0,0)'};stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end);
 const look=$('look');let lookLast=null;look.addEventListener('pointerdown',e=>{look.setPointerCapture(e.pointerId);lookLast=[e.clientX,e.clientY]});look.addEventListener('pointermove',e=>{if(lookLast){yaw-=(e.clientX-lookLast[0])*.004;pitch=Math.max(-1.2,Math.min(1.2,pitch-(e.clientY-lookLast[1])*.004));lookLast=[e.clientX,e.clientY]}});look.addEventListener('pointerup',()=>lookLast=null);look.addEventListener('pointercancel',()=>lookLast=null);
@@ -75,4 +80,32 @@ const maxSpeed=(keys.ShiftLeft||keys.ShiftRight)?6:2.4,sn=Math.sin(yaw),cs=Math.
 let nx=camera.position.x+vel.x*dt,nz=camera.position.z+vel.z*dt;for(const [cx,cz,r] of COLLIDERS){const ddx=nx-cx,ddz=nz-cz,d=Math.hypot(ddx,ddz);if(d<r&&d>1e-4){nx=cx+ddx/d*r;nz=cz+ddz/d*r}}const rr=Math.hypot(nx,nz);if(rr>45){nx*=45/rr;nz*=45/rr}camera.position.x=nx;camera.position.z=nz;
 bob+=Math.hypot(vel.x,vel.z)*dt*2.2;camera.position.y=1.75+Math.sin(bob)*0.025*Math.min(1,Math.hypot(vel.x,vel.z)/2.4);
  sky.position.copy(camera.position);renderer.render(scene,camera);const elapsed=dt*1000;if(elapsed>0&&elapsed<100)frameStats.push(elapsed);if(frameStats.length>120)frameStats.shift();const now=performance.now();if(now-lastReport>700){const sorted=[...frameStats].sort((a,b)=>a-b);const med=sorted[Math.floor(sorted.length/2)]||0;const fps=med?1000/med:0;$('fps').textContent=fps.toFixed(1);$('ms').textContent=med.toFixed(1);$('draws').textContent=renderer.info.render.drawCalls.toLocaleString();$('triangles').textContent=renderer.info.render.triangles.toLocaleString();reports.push({at:now,quality,fps:Math.round(fps*10)/10,frameMs:med,draws:renderer.info.render.drawCalls,triangles:renderer.info.render.triangles});if(reports.length>500)reports.shift();lastReport=now}}
+
+// ---- Gaussian splat experiment -------------------------------------------------------------
+// Uses three.js r186's native GaussianSplat (WebGPU compute sort; JS sort on the WebGL2 fallback).
+// A splat is placed on the ground ~6 m in front of the camera. Objects outside 0.3-40 m are scaled
+// to 3 m; otherwise the capture keeps its own (usually metric) scale. Splats don't cast shadows or take fog.
+const SPLAT_SAMPLES={lion:{name:'lion.v3.spz',url:'./splats/lion.v3.spz?v=__BUILD__',flip:true,fit:1.4,credit:'Sample splat “Lion” by Renaud (superspl.at), CC BY 4.0'}};
+let splatMesh=null,splatPlace=null,splatStats=null;
+function splatLoaderFor(name){const n=name.toLowerCase().split('?')[0];if(n.endsWith('.spz'))return SPZLoader;if(n.endsWith('.ply'))return GaussianSplatPLYLoader;if(n.endsWith('.ksplat'))return KSPLATLoader;if(n.endsWith('.splat'))return SPLATLoader;return null}
+function clearSplat(){if(!splatMesh)return;scene.remove(splatMesh);splatMesh.geometry.dispose();splatMesh.material.dispose();splatMesh=null;splatStats=null;$('flip').hidden=true;$('splatrow').hidden=true}
+function placeSplat(){const m=splatMesh,o=splatPlace;m.position.set(0,0,0);m.rotation.set(o.flip?Math.PI:0,o.yaw,0);m.scale.setScalar(1);m.updateMatrixWorld(true);
+ let box=m.splatGeometry.boundingBox.clone().applyMatrix4(m.matrixWorld);const size=box.getSize(new THREE.Vector3()),maxDim=Math.max(size.x,size.y,size.z);
+ const sc=o.fit?o.fit/size.y:(maxDim>40||maxDim<0.3?3/maxDim:1);m.scale.setScalar(sc);m.updateMatrixWorld(true);box=m.splatGeometry.boundingBox.clone().applyMatrix4(m.matrixWorld);
+ const c=box.getCenter(new THREE.Vector3());m.position.set(o.target.x-c.x,-box.min.y,o.target.z-c.z);splatStats.scale=+sc.toFixed(3)}
+async function loadSplat(url,name,opts={}){const L=splatLoaderFor(name);if(!L){$('status').textContent='Unsupported splat file: '+name+' (use .spz, .ply, .splat or .ksplat)';return}
+ $('status').textContent='Loading splat '+name+'…';const t0=performance.now();
+ try{const data=await new L().loadAsync(url);const t1=performance.now();clearSplat();splatMesh=new GaussianSplat(data);
+  const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),target=camera.position.clone().addScaledVector(fwd,6);target.y=0;const tr=Math.hypot(target.x,target.z);if(tr>40)target.multiplyScalar(40/tr);
+  splatPlace={flip:!!opts.flip,fit:opts.fit||0,yaw:yaw,target};splatStats={name,count:data.getAttribute('position').count,bytes:opts.bytes||null,loadMs:Math.round(t1-t0),scale:1};
+  placeSplat();scene.add(splatMesh);$('flip').hidden=false;$('splatrow').hidden=false;$('splatcount').textContent=splatStats.count.toLocaleString()+' · '+splatStats.loadMs+' ms load';
+  $('status').textContent=opts.credit||('Splat '+name+' · '+splatStats.count.toLocaleString()+' splats')}
+ catch(e){console.error(e);$('status').textContent='Splat failed to load: '+e.message}}
+$('splat').onchange=e=>{const v=e.target.value;if(v==='none'){clearSplat();$('status').textContent='Naturalistic materials · dense leaf instances'}else if(SPLAT_SAMPLES[v]){const sm=SPLAT_SAMPLES[v];loadSplat(sm.url,sm.name,sm)}};
+$('open').onclick=()=>$('splatfile').click();
+$('splatfile').onchange=e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f);$('splat').value='none';loadSplat(u,f.name,{bytes:f.size}).finally(()=>URL.revokeObjectURL(u));e.target.value=''};
+$('flip').onclick=()=>{if(!splatMesh)return;splatPlace.flip=!splatPlace.flip;placeSplat()};
+// Keep the status pill just below the (wrapping) header.
+function placeStatus(){$('status').style.top=Math.round(document.querySelector('header').getBoundingClientRect().bottom+8)+'px'}
+window.addEventListener('resize',placeStatus);placeStatus();
 (async()=>{try{await renderer.init();$('backend').textContent=renderer.backend?.isWebGPUBackend?'WebGPU':'WebGL2 fallback';build();renderer.setAnimationLoop(tick)}catch(e){$('status').textContent='Unable to start renderer: '+e.message;console.error(e)}})();

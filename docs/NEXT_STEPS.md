@@ -20,7 +20,7 @@
 
 ## Milestone C: splat feasibility
 - [ ] Source licensed/self-captured real forest imagery with adequate view coverage.
-- [ ] Render splat scene in browser and record memory, load time and FPS.
+- [ ] Render splat scene in browser and record memory, load time and FPS. *(Pipeline in place 15 Nov 2026: native three.js splats, sample + local file loading, load time and splat count in HUD/export. Needs a real oak/forest capture and phone measurements.)*
 - [ ] Place mesh-based interactive oak within splat scene; test depth/occlusion and lighting coherence.
 - [ ] Compare against classic mesh forest using same path.
 
