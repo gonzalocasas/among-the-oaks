@@ -13,6 +13,12 @@
 - Fixed two mobile overlaps: status pill covering "Export results", and joystick covering the stats panel.
 - Console warnings only: `THREE.Clock` deprecated (use `THREE.Timer`), `PCFSoftShadowMap` replaced by `PCFShadowMap` under WebGPURenderer.
 
+## Changes after first phone test, 15 Nov 2026
+- Phone (WebGPU) reported ~59 FPS in both modes at High quality.
+- Naturalistic: gradient blue sky dome, small sun disc sprite, thinner fog, warm yellow sun, warm ground bounce.
+- Movement: fixed yaw sign bug (walk direction diverged from view after turning, strafe inverted), added smoothed velocity, diagonal normalisation, sliding collision on all trunks, light head bob, arrow keys.
+- Cache busting: deploy workflow stamps the commit hash into `index.html` (`main.js?v=<sha>`) and writes `version.json`; a stale cached page reloads once with `?v=<sha>`.
+
 ## Not verified
 - Actual browser rendering and console runtime success.
 - WebGPU and WebGL2 fallback on any physical device.

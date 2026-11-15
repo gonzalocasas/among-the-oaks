@@ -18,9 +18,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp build version (cache busting)
+        run: |
+          V="${GITHUB_SHA::8}"
+          mkdir _site && cp -r prototype/. _site/
+          grep -rl "__BUILD__" _site | xargs sed -i "s/__BUILD__/$V/g"
+          printf '{"v":"%s"}\n' "$V" > _site/version.json
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./prototype
+          publish_dir: ./_site
           publish_branch: gh-pages
           enable_jekyll: false
