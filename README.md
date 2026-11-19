@@ -10,7 +10,7 @@ To try the current procedural rendering prototype:
 ./scripts/serve.sh
 ```
 
-Then open http://localhost:8080 on the same computer. The current source **requires internet to load Three.js from jsDelivr**. This is NOT yet a verified production build or a photorealistic demo.
+Then open http://localhost:8080 on the same computer. The current source **requires internet to load Three.js from jsDelivr and Spark from sparkjs.dev**. This is NOT yet a verified production build or a photorealistic demo.
 
 `concept-art/` contains AI-generated references only; none are screenshots from the prototype. See `docs/VALIDATION.md` for what was and was not tested.
 

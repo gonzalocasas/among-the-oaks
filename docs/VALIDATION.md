@@ -32,6 +32,14 @@
 - Headless Chrome (WebGL2, software): sample loads and decodes in ~1.5–2 s; local `.splat` file loads via the file input; Flip and clear work; no JS errors. The triangle counter includes 2 triangles per splat.
 - Known limits: splats take no fog, light or shadows from the scene; no collision; "Flip" only covers the common upside-down case.
 
+## Spark migration, 19 Nov 2026
+- Pinned Spark 2.4.0 (latest stable release listed upstream) and retained Three.js 0.186.1.
+- Replaced native GaussianSplat/loaders with SparkRenderer and SplatMesh; switched to WebGLRenderer because Spark 2.4 uses WebGL2.
+- Preserved sample/local SPZ, PLY, SPLAT and KSPLAT loading, grounding/scaling, flip, counts and load-time export. Pending loads are discarded after clear or a newer load request.
+- HUD/export explicitly identify Spark; draw calls use WebGLRenderer's `info.render.calls`, reset once per frame to include nested Spark work.
+- Verified JavaScript syntax with `node --check`, diff whitespace with `git diff --check`, and successful download/syntax of the pinned Spark module. Checked loading, bounds and disposal APIs against the v2.4.0 source.
+- Browser verification was unavailable (browser access host unavailable). Sample rendering, local formats, controls, occlusion and mobile performance still require runtime checks for this migration. Earlier runtime results above apply to the previous native renderer.
+
 ## Not verified
 - Actual browser rendering and console runtime success.
 - WebGPU and WebGL2 fallback on any physical device.
